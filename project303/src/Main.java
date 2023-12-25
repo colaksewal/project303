@@ -2,10 +2,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Main {
 
@@ -32,9 +29,21 @@ public class Main {
         //printCourses(courses);
         //printClassrooms(classrooms);
 
+        //Backtracing
+        /*Schedule schedule = backtrackingScheduler(courses, classrooms);
+        printSchedule(schedule);*/
 
-        Schedule schedule = backtrackingScheduler(courses, classrooms);
-        printSchedule(schedule);
+        List<Schedule> schedules = generateGreedySchedules(courses, classrooms);
+
+        if (schedules.isEmpty()) {
+            System.out.println("No valid schedules found.");
+        } else {
+            for (int i = 0; i < schedules.size(); i++) {
+                System.out.println("Schedule " + (i + 1) + ":");
+                printSchedule(schedules.get(i));
+                System.out.println();
+            }
+        }
 
 
     }
@@ -164,6 +173,8 @@ public class Main {
     }
 
 
+    /*
+
     public static Schedule backtrackingScheduler(Course[] courses, Classroom[] classrooms) {
         Schedule schedule = new Schedule();
 
@@ -228,6 +239,78 @@ public class Main {
             System.out.println("Day " + (day + 1) + ":");
 
             Map<Integer, List<Exam>> daySchedule = schedule.getSchedule(day);
+            if (daySchedule != null) {
+                for (int hour = START_HOUR; hour <= END_HOUR; hour++) {
+                    List<Exam> exams = daySchedule.get(hour);
+
+                    if (exams != null) {
+                        for (Exam exam : exams) {
+                            System.out.println("Time: Day " + (day + 1) + ", Hour " + hour +
+                                    " - Course: " + exam.getCourse().getCourseId() +
+                                    ", Professor: " + exam.getCourse().getProfessorName() +
+                                    ", Classroom: " + exam.getClassroom().getRoomId());
+                        }
+                    }
+                }
+            }
+        }
+    }*/
+
+    private static List<Schedule> generateGreedySchedules(Course[] courses, Classroom[] classrooms) {
+        List<Schedule> schedules = new ArrayList<>();
+
+        List<Course> sortedCourses = new ArrayList<>(List.of(courses));
+        Collections.shuffle(sortedCourses); // Kursları karıştır
+
+        for (Course course : sortedCourses) {
+            for (int day = 0; day < DAYS_IN_WEEK; day++) {
+                for (int hour = START_HOUR; hour <= END_HOUR; hour++) {
+                    for (Classroom classroom : classrooms) {
+                        if (classroom.getCapacity() >= classroom.getCapacity() / 2) {
+                            Schedule schedule = new Schedule();
+                            schedule.scheduleExam(day, hour, course, classroom);
+
+                            // Diğer sınavları da random sırayla ekleyebilirsiniz
+                            List<Course> remainingCourses = new ArrayList<>(List.of(courses));
+                            remainingCourses.remove(course); // Şu anki kursu çıkar
+
+                            Collections.shuffle(remainingCourses);
+
+                            for (Course remainingCourse : remainingCourses) {
+                                for (int remainingDay = 0; remainingDay < DAYS_IN_WEEK; remainingDay++) {
+                                    for (int remainingHour = START_HOUR; remainingHour <= END_HOUR; remainingHour++) {
+                                        for (Classroom remainingClassroom : classrooms) {
+                                            if (remainingClassroom.getCapacity() >= remainingClassroom.getCapacity() / 2) {
+                                                schedule.scheduleExam(remainingDay, remainingHour, remainingCourse, remainingClassroom);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (schedule.isComplete(courses.length)) {
+                                schedules.add(schedule);
+                                return schedules; // Bir tane bile çözüm bulduysa yeterli
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return schedules;
+    }
+
+    private static void printSchedule(Schedule schedule) {
+        if (schedule == null) {
+            System.out.println("Schedule is not available.");
+            return;
+        }
+
+        for (int day = 0; day < DAYS_IN_WEEK; day++) {
+            System.out.println("Day " + (day + 1) + ":");
+            Map<Integer, List<Exam>> daySchedule = schedule.getSchedule(day);
+
             if (daySchedule != null) {
                 for (int hour = START_HOUR; hour <= END_HOUR; hour++) {
                     List<Exam> exams = daySchedule.get(hour);
