@@ -9,29 +9,57 @@ public class Main {
     private static final int DAYS_IN_WEEK = 6;
     private static final int START_HOUR = 9;
     private static final int END_HOUR = 18;
-
+  static Map<String, Integer> studentsPerCourse=new HashMap<>();
     public static void main(String[] args) {
-        if (args.length != 2) {
-            System.out.println("Usage: CsvReader <classListCsvFile> <classroomCapacityCsvFile>");
-            System.exit(1);
+      
+
+        /*
+         if (args.length != 2) {
+          System.out.
+          println("Usage: CsvReader <classListCsvFile> <classroomCapacityCsvFile>");
+          System.exit(1);
+          }
+          
+          String classListFile = args[0];
+          String classroomCapacityFile = args[1];
+         */
+        // READ CSV FILES
+        Course[] courses = readCourseCsvFile("classList.csv");
+
+        Classroom[] classrooms = readClassroomCsvFile("classroomCapacity.csv");
+
+        printCourses(courses);
+        printClassrooms(classrooms);
+
+        // Extract professors from courses
+        Set<String> uniqueProfessors = extractProfessors(courses);
+        String[] professorsArray = uniqueProfessors.toArray(new String[0]);
+        System.out.println("Professors:");
+        for (String professor : professorsArray) {
+            System.out.println(professor);
         }
-
-        String classListFile = args[0];
-        String classroomCapacityFile = args[1];
-
-        //READ CSV FILES
-        Course[] courses = readCourseCsvFile(classListFile);
+        System.out.println(professorsArray.length);
 
 
-        Classroom[] classrooms = readClassroomCsvFile(classroomCapacityFile);
+        // Extract courseIds from courses
+        Set<String> uniqueCourseIds = extractCourseIds(courses);
+
+        String[] courseIdsArray = uniqueCourseIds.toArray(new String[0]);
+        System.out.println("Course IDs:");
+
+        for (String courseId : courseIdsArray) {
+            System.out.println(courseId);
+        }
+        System.out.println(courseIdsArray.length);
+
+        printStudentsPerCourse();
 
 
-        //printCourses(courses);
-        //printClassrooms(classrooms);
-
-        //Backtracing
-        /*Schedule schedule = backtrackingScheduler(courses, classrooms);
-        printSchedule(schedule);*/
+        // Backtracing
+        /*
+         Schedule schedule = backtrackingScheduler(courses, classrooms);
+          printSchedule(schedule);
+         */
 
         List<Schedule> schedules = generateGreedySchedules(courses, classrooms);
 
@@ -45,11 +73,31 @@ public class Main {
             }
         }
 
-
     }
 
+    private static Set<String> extractProfessors(Course[] courses) {
+        Set<String> uniqueProfessors = new HashSet<>();
 
+        if (courses != null) {
+            for (Course course : courses) {
+                uniqueProfessors.add(course.getProfessorName());
+            }
+        }
 
+        return uniqueProfessors;
+    }
+
+    private static Set<String> extractCourseIds(Course[] courses) {
+        Set<String> uniqueCourseIds = new HashSet<>();
+
+        if (courses != null) {
+            for (Course course : courses) {
+                uniqueCourseIds.add(course.getCourseId());
+            }
+        }
+
+        return uniqueCourseIds;
+    }
 
     private static Course[] readCourseCsvFile(String csvFile) {
         String line;
@@ -67,6 +115,7 @@ public class Main {
                     String studentId = columns[0].trim();
                     String professorName = columns[1].trim();
                     String courseId = columns[2].trim();
+                    studentsPerCourse.put(courseId, studentsPerCourse.getOrDefault(courseId, 0) + 1);
                     String examDurationString = columns[3].trim();
 
                     // "Exam Duration" sütunu sayısal bir değerse devam edelim
@@ -88,6 +137,14 @@ public class Main {
         }
 
         return courses;
+    }
+
+
+    private static void printStudentsPerCourse() {
+        System.out.println("Number of students per course:");
+        for (Map.Entry<String, Integer> entry : studentsPerCourse.entrySet()) {
+            System.out.println(entry.getKey() + ": " + entry.getValue() + " students");
+        }
     }
 
     private static Classroom[] readClassroomCsvFile(String csvFile) {
@@ -172,89 +229,91 @@ public class Main {
         }
     }
 
-
     /*
-
-    public static Schedule backtrackingScheduler(Course[] courses, Classroom[] classrooms) {
-        Schedule schedule = new Schedule();
-
-        // Başlangıç saatini belirle
-        int currentHour = START_HOUR;
-        int currentDay = 0;
-
-        // Backtracking algoritması ile deneme
-        backtrackingHelper(courses, classrooms, schedule, currentDay, currentHour);
-
-        return schedule;
-    }
-
-    public static boolean backtrackingHelper(Course[] courses, Classroom[] classrooms, Schedule schedule,
-                                              int currentDay, int currentHour) {
-        // Tüm sınavlar tamamlandıysa başarıyla tamamlandı
-        if (schedule.isComplete(courses.length)) {
-            return true;
-        }
-
-        // Her sınav için
-        for (Course course : courses) {
-            // Eğer sınav daha önce planlanmışsa atla
-            if (schedule.isExamScheduled(course)) {
-                continue;
-            }
-
-            // Her sınıf için
-            for (Classroom classroom : classrooms) {
-                // Eğer sınıf kapasitesi uygunsa devam et
-                if (classroom.getCapacity() >= classroom.getCapacity() / 2) {
-                    // Sınavı planla
-                    schedule.scheduleExam(currentDay, currentHour, course, classroom);
-
-                    // Rekürsif olarak bir sonraki sınavı planla
-                    int nextDay = (currentHour == END_HOUR) ? currentDay + 1 : currentDay;
-                    int nextHour = (currentHour + 1) % (END_HOUR + 1);
-
-                    if (nextDay < DAYS_IN_WEEK &&
-                            backtrackingHelper(courses, classrooms, schedule, nextDay, nextHour)) {
-                        return true; // Başarıyla tamamlandı
-                    }
-
-                    // Planı geri al
-                    schedule.unscheduleExam(currentDay, currentHour, course, classroom);
-                }
-            }
-        }
-        return false; // Başarısız oldu
-    }
-
-
-    private static void printSchedule(Schedule schedule) {
-        if (schedule == null) {
-            System.out.println("Schedule is not available.");
-            return;
-        }
-
-        System.out.println("Midterm Exam Schedule:");
-
-        for (int day = 0; day < DAYS_IN_WEEK; day++) {
-            System.out.println("Day " + (day + 1) + ":");
-
-            Map<Integer, List<Exam>> daySchedule = schedule.getSchedule(day);
-            if (daySchedule != null) {
-                for (int hour = START_HOUR; hour <= END_HOUR; hour++) {
-                    List<Exam> exams = daySchedule.get(hour);
-
-                    if (exams != null) {
-                        for (Exam exam : exams) {
-                            System.out.println("Time: Day " + (day + 1) + ", Hour " + hour +
-                                    " - Course: " + exam.getCourse().getCourseId() +
-                                    ", Professor: " + exam.getCourse().getProfessorName() +
-                                    ", Classroom: " + exam.getClassroom().getRoomId());
-                        }
-                    }
-                }
-            }
-        }
-    }*/
+      
+      public static Schedule backtrackingScheduler(Course[] courses, Classroom[]
+      classrooms) {
+      Schedule schedule = new Schedule();
+      
+      // Başlangıç saatini belirle
+      int currentHour = START_HOUR;
+      int currentDay = 0;
+      
+      // Backtracking algoritması ile deneme
+      backtrackingHelper(courses, classrooms, schedule, currentDay, currentHour);
+      
+      return schedule;
+      }
+      
+      public static boolean backtrackingHelper(Course[] courses, Classroom[]
+      classrooms, Schedule schedule,
+      int currentDay, int currentHour) {
+      // Tüm sınavlar tamamlandıysa başarıyla tamamlandı
+      if (schedule.isComplete(courses.length)) {
+      return true;
+      }
+      
+      // Her sınav için
+      for (Course course : courses) {
+      // Eğer sınav daha önce planlanmışsa atla
+      if (schedule.isExamScheduled(course)) {
+      continue;
+      }
+      
+      // Her sınıf için
+      for (Classroom classroom : classrooms) {
+      // Eğer sınıf kapasitesi uygunsa devam et
+      if (classroom.getCapacity() >= classroom.getCapacity() / 2) {
+      // Sınavı planla
+      schedule.scheduleExam(currentDay, currentHour, course, classroom);
+      
+      // Rekürsif olarak bir sonraki sınavı planla
+      int nextDay = (currentHour == END_HOUR) ? currentDay + 1 : currentDay;
+      int nextHour = (currentHour + 1) % (END_HOUR + 1);
+      
+      if (nextDay < DAYS_IN_WEEK &&
+      backtrackingHelper(courses, classrooms, schedule, nextDay, nextHour)) {
+      return true; // Başarıyla tamamlandı
+      }
+      
+      // Planı geri al
+      schedule.unscheduleExam(currentDay, currentHour, course, classroom);
+      }
+      }
+      }
+      return false; // Başarısız oldu
+      }
+      
+      
+      private static void printSchedule(Schedule schedule) {
+      if (schedule == null) {
+      System.out.println("Schedule is not available.");
+      return;
+      }
+      
+      System.out.println("Midterm Exam Schedule:");
+      
+      for (int day = 0; day < DAYS_IN_WEEK; day++) {
+      System.out.println("Day " + (day + 1) + ":");
+      
+      Map<Integer, List<Exam>> daySchedule = schedule.getSchedule(day);
+      if (daySchedule != null) {
+      for (int hour = START_HOUR; hour <= END_HOUR; hour++) {
+      List<Exam> exams = daySchedule.get(hour);
+      
+      if (exams != null) {
+      for (Exam exam : exams) {
+      System.out.println("Time: Day " + (day + 1) + ", Hour " + hour +
+      " - Course: " + exam.getCourse().getCourseId() +
+      ", Professor: " + exam.getCourse().getProfessorName() +
+      ", Classroom: " + exam.getClassroom().getRoomId());
+      }
+      }
+      }
+      }
+      }
+      }
+     */
 
     private static List<Schedule> generateGreedySchedules(Course[] courses, Classroom[] classrooms) {
         List<Schedule> schedules = new ArrayList<>();
@@ -280,8 +339,10 @@ public class Main {
                                 for (int remainingDay = 0; remainingDay < DAYS_IN_WEEK; remainingDay++) {
                                     for (int remainingHour = START_HOUR; remainingHour <= END_HOUR; remainingHour++) {
                                         for (Classroom remainingClassroom : classrooms) {
-                                            if (remainingClassroom.getCapacity() >= remainingClassroom.getCapacity() / 2) {
-                                                schedule.scheduleExam(remainingDay, remainingHour, remainingCourse, remainingClassroom);
+                                            if (remainingClassroom.getCapacity() >= remainingClassroom.getCapacity()
+                                                    / 2) {
+                                                schedule.scheduleExam(remainingDay, remainingHour, remainingCourse,
+                                                        remainingClassroom);
                                             }
                                         }
                                     }
@@ -329,13 +390,3 @@ public class Main {
     }
 
 }
-
-
-
-
-
-
-
-
-
-
