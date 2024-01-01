@@ -11,18 +11,6 @@ public class Main {
     private static final int END_HOUR = 18;
   static Map<String, Integer> studentsPerCourse=new HashMap<>();
     public static void main(String[] args) {
-      
-
-        /*
-         if (args.length != 2) {
-          System.out.
-          println("Usage: CsvReader <classListCsvFile> <classroomCapacityCsvFile>");
-          System.exit(1);
-          }
-          
-          String classListFile = args[0];
-          String classroomCapacityFile = args[1];
-         */
         // READ CSV FILES
         Course[] courses = readCourseCsvFile("classList.csv");
 
@@ -51,8 +39,9 @@ public class Main {
             System.out.println(courseId);
         }
         System.out.println(courseIdsArray.length);
-
+        //Print course id(keys) and number of students(values).HashSet
         printStudentsPerCourse();
+
 
 
         // Backtracing
@@ -219,14 +208,17 @@ public class Main {
     }
 
     private static void printClassrooms(Classroom[] classrooms) {
+        int counter=0;
         if (classrooms != null) {
             System.out.println("Printing Classrooms:");
             for (Classroom classroom : classrooms) {
                 System.out.println(classroom);
+                counter++;
             }
         } else {
             System.out.println("No classrooms to print.");
         }
+        System.out.println("Classroom number: "+counter);
     }
 
     /*
@@ -318,47 +310,66 @@ public class Main {
     private static List<Schedule> generateGreedySchedules(Course[] courses, Classroom[] classrooms) {
         List<Schedule> schedules = new ArrayList<>();
 
+
         List<Course> sortedCourses = new ArrayList<>(List.of(courses));
-        Collections.shuffle(sortedCourses); // Kursları karıştır
+        Collections.shuffle(sortedCourses); // Shuffle Courses
+
+        //Compose new ArrayList for used courses. I will use this ArrayList to find remaining courses
+        List<Course> usedCourse = new ArrayList<>();
 
         for (Course course : sortedCourses) {
             for (int day = 0; day < DAYS_IN_WEEK; day++) {
-                for (int hour = START_HOUR; hour <= END_HOUR; hour++) {
+                for (int hour = START_HOUR; hour <= END_HOUR; hour++) {//saat 6 dahil mi?
                     for (Classroom classroom : classrooms) {
-                        if (classroom.getCapacity() >= classroom.getCapacity() / 2) {
-                            Schedule schedule = new Schedule();
-                            schedule.scheduleExam(day, hour, course, classroom);
 
-                            // Diğer sınavları da random sırayla ekleyebilirsiniz
-                            List<Course> remainingCourses = new ArrayList<>(List.of(courses));
-                            remainingCourses.remove(course); // Şu anki kursu çıkar
-
-                            Collections.shuffle(remainingCourses);
-
-                            for (Course remainingCourse : remainingCourses) {
-                                for (int remainingDay = 0; remainingDay < DAYS_IN_WEEK; remainingDay++) {
-                                    for (int remainingHour = START_HOUR; remainingHour <= END_HOUR; remainingHour++) {
-                                        for (Classroom remainingClassroom : classrooms) {
-                                            if (remainingClassroom.getCapacity() >= remainingClassroom.getCapacity()
-                                                    / 2) {
-                                                schedule.scheduleExam(remainingDay, remainingHour, remainingCourse,
-                                                        remainingClassroom);
+                        for (Map.Entry<String, Integer> entries : studentsPerCourse.entrySet()) {
+                            //I write this if statement for reaching matching present course and course of studentsPerCourse
+                            //Because i want to find student number for present course
+                            if (course.getCourseId() == entries.getKey()) {
+                                //ClassRoom capacity / 2 should be grater then student number
+                                // entries.getValue() is student number which take present course
+                                if (classroom.getCapacity() / 2 >= entries.getValue()) {
+                                    Schedule schedule = new Schedule(); //compose nested map structure as schedule
+                                    schedule.scheduleExam(day, hour, course, classroom);
+                                    //Add used courses to Arraylist
+                                    usedCourse.add(course);
+                                    //Add remaining courses to continue control
+                                    List<Course> remainingCourses = new ArrayList<>(List.of(courses));
+                                    //Bunu kullanırsak önceki döngüde çıkardığımız kurs da eklenmez mi?Bu yüzden modify etcem
+                               /*List<Course> remainingCourses = new ArrayList<>(List.of(courses));
+                            remainingCourses.remove(course); // Şu anki kursu çıkar*/
+                                    Collections.shuffle(remainingCourses);
+                                    for (Course remainingCourse : remainingCourses) {
+                                        //If it is not in usedCourse ArrayList, find classroom for remaining course
+                                        if (!usedCourse.contains(remainingCourse)) {
+                                            for (int remainingDay = 0; remainingDay < DAYS_IN_WEEK; remainingDay++) {
+                                                for (int remainingHour = START_HOUR; remainingHour <= END_HOUR; remainingHour++) {
+                                                    for (Classroom remainingClassroom : classrooms) {
+                                                        for (Map.Entry<String, Integer> remainingEntries : studentsPerCourse.entrySet()) {
+                                                            if (remainingCourse.getCourseId() == entries.getKey()) {
+                                                                if (remainingClassroom.getCapacity() / 2 >= remainingEntries.getValue()) {
+                                                                    schedule.scheduleExam(remainingDay, remainingHour, remainingCourse,
+                                                                            remainingClassroom);
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
                                             }
                                         }
+                                        }
+                                    //Bunun yeri yanlış olabilir
+                                    if (schedule.isComplete(courses.length)) {
+                                        schedules.add(schedule);
+                                        return schedules; // Bir tane bile çözüm bulduysa yeterli
                                     }
                                 }
-                            }
-
-                            if (schedule.isComplete(courses.length)) {
-                                schedules.add(schedule);
-                                return schedules; // Bir tane bile çözüm bulduysa yeterli
                             }
                         }
                     }
                 }
             }
         }
-
         return schedules;
     }
 
@@ -367,7 +378,6 @@ public class Main {
             System.out.println("Schedule is not available.");
             return;
         }
-
         for (int day = 0; day < DAYS_IN_WEEK; day++) {
             System.out.println("Day " + (day + 1) + ":");
             Map<Integer, List<Exam>> daySchedule = schedule.getSchedule(day);

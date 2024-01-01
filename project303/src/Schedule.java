@@ -12,7 +12,7 @@ public class Schedule{
     }
 
     public void scheduleExam(int day, int hour, Course course, Classroom classroom) {
-        schedule.computeIfAbsent(day, k -> new HashMap<>());
+        schedule.computeIfAbsent(day, k -> new HashMap<>());//ensure there is a mapping, if is not compose new hashmap and associated with day
         schedule.get(day).computeIfAbsent(hour, k -> new ArrayList<>());
         schedule.get(day).get(hour).add(new Exam(course, classroom));
     }
