@@ -11,11 +11,48 @@ public class Schedule{
         this.schedule = new HashMap<>();
     }
 
-    public void scheduleExam(int day, int hour, Course course, Classroom classroom) {
+    public boolean scheduleExam(int day, int hour, Course course, Classroom classroom) {
+        if (!hasStudentExam(day, hour, course) && !hasProfessorExam(day, hour, course)) {
+           // if (classroom.getCapacity() >= 2 * studentsPerCourse.get(course.getCourseId())) {
         schedule.computeIfAbsent(day, k -> new HashMap<>());//ensure there is a mapping, if is not compose new hashmap and associated with day
         schedule.get(day).computeIfAbsent(hour, k -> new ArrayList<>());
         schedule.get(day).get(hour).add(new Exam(course, classroom));
+                return true;
+            }
+        //}
+        return false;
     }
+
+    private boolean hasStudentExam(int day, int hour, Course course) {
+        Map<Integer, List<Exam>> hourSchedule = schedule.get(day);
+        if (hourSchedule != null) {
+            List<Exam> exams = hourSchedule.get(hour);
+            if (exams != null) {
+                for (Exam exam : exams) {
+                    if (exam.getCourse().getStudentId().equals(course.getStudentId())) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean hasProfessorExam(int day, int hour, Course course) {
+        Map<Integer, List<Exam>> hourSchedule = schedule.get(day);
+        if (hourSchedule != null) {
+            List<Exam> exams = hourSchedule.get(hour);
+            if (exams != null) {
+                for (Exam exam : exams) {
+                    if (exam.getCourse().getProfessorName().equals(course.getProfessorName())) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
 
     public void unscheduleExam(int day, int hour, Course course, Classroom classroom) {
         if (schedule.containsKey(day) && schedule.get(day).containsKey(hour)) {
