@@ -49,9 +49,17 @@ public class Main {
          Schedule schedule = backtrackingScheduler(courses, classrooms);
           printSchedule(schedule);
          */
+        
+        //Get input from user, and put to list these inputs
+         Scanner scanner = new Scanner(System.in);
+        String input;
+        List<String> inputList = new ArrayList<>();
+        while(true){
+            input = scanner.nextLine();
+            inputList.add(input);
+        }
 
-
-        List<Schedule> schedules = generateGreedySchedules(courses, classrooms);
+        List<Schedule> schedules = generateGreedySchedules(courses, classrooms,inputList);
 
         if (schedules.isEmpty()) {
             System.out.println("No valid schedules found.");
@@ -309,7 +317,7 @@ public class Main {
       }
      */
 
-    private static List<Schedule> generateGreedySchedules(Course[] courses, Classroom[] classrooms) {
+    private static List<Schedule> generateGreedySchedules(Course[] courses, Classroom[] classrooms,List<String> inputList) {
         List<Schedule> schedules = new ArrayList<>();
 
         List<Course> sortedCourses = new ArrayList<>(List.of(courses));
