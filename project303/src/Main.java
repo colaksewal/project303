@@ -49,17 +49,25 @@ public class Main {
          Schedule schedule = backtrackingScheduler(courses, classrooms);
           printSchedule(schedule);
          */
-        
-        //Get input from user, and put to list these inputs
+
+        //infinite loop olduğu için kapattım
+      /*  //Get input from user, and put to list these inputs
          Scanner scanner = new Scanner(System.in);
         String input;
         List<String> inputList = new ArrayList<>();
+
         while(true){
             input = scanner.nextLine();
             inputList.add(input);
-        }
+        } */
 
-        List<Schedule> schedules = generateGreedySchedules(courses, classrooms,inputList);
+
+        List<String> blockedHours = getUserInputBlockedHours();
+        System.out.println("Blocked Hours:");
+        for (String blockedHour : blockedHours) {
+            System.out.println(blockedHour);
+        }
+        List<Schedule> schedules = generateGreedySchedules(courses, classrooms,blockedHours);
 
         if (schedules.isEmpty()) {
             System.out.println("No valid schedules found.");
@@ -72,7 +80,26 @@ public class Main {
         }
 
     }
+    private static List<String> getUserInputBlockedHours() {
+        List<String> blockedHours = new ArrayList<>();
+        Scanner scanner = new Scanner(System.in);
 
+        System.out.println("Enter blocked hours for common courses (format: Day Hour CourseID):");
+        System.out.println("Example: Monday 2 PM TİT102 ");
+
+        while (true) {
+            System.out.print("Enter blocked hour (or type 'done' to finish): ");
+            String input = scanner.nextLine().trim();
+
+            if (input.equalsIgnoreCase("done")) {
+                break;
+            }
+
+            blockedHours.add(input);
+        }
+
+        return blockedHours;
+    }
     private static Set<String> extractProfessors(Course[] courses) {
         Set<String> uniqueProfessors = new HashSet<>();
 
