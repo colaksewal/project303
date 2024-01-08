@@ -9,15 +9,17 @@ public class Main {
     private static final int DAYS_IN_WEEK = 6;
     private static final int START_HOUR = 9;
     private static final int END_HOUR = 18;
-    static Map<String, Integer> studentsPerCourse=new HashMap<>();
+    static Map<String, Integer> studentCountPerCourse = new HashMap<>();
+    static Map<String, Integer> examDurationPerCourse = new HashMap<>();
     public static void main(String[] args) {
-        // READ CSV FILES
+
+      /*  // READ CSV FILES
         Course[] courses = readCourseCsvFile("classList.csv");
 
         Classroom[] classrooms = readClassroomCsvFile("classroomCapacity.csv");
 
-       // printCourses(courses);
-      //  printClassrooms(classrooms);
+        printCourses(courses);
+        printClassrooms(classrooms);
 
         // Extract professors from courses
         Set<String> uniqueProfessors = extractProfessors(courses);
@@ -59,7 +61,7 @@ public class Main {
         while(true){
             input = scanner.nextLine();
             inputList.add(input);
-        } */
+        }
 
 
         List<String> blockedHours = getUserInputBlockedHours();
@@ -78,29 +80,71 @@ public class Main {
                 System.out.println();
             }
         }
+*/
 
-    }
-    private static List<String> getUserInputBlockedHours() {
-        List<String> blockedHours = new ArrayList<>();
-        Scanner scanner = new Scanner(System.in);
 
-        System.out.println("Enter blocked hours for common courses (format: Day Hour CourseID):");
-        System.out.println("Example: Monday 2 PM TİT102 ");
 
-        while (true) {
-            System.out.print("Enter blocked hour (or type 'done' to finish): ");
-            String input = scanner.nextLine().trim();
+            List<Course> courses = readCourseCsvFile("classList.csv");
+            printCourses(courses);
+            List<Classroom> classrooms = readClassroomCsvFile("classroomCapacity.csv");
+            printClassrooms(classrooms);
 
-            if (input.equalsIgnoreCase("done")) {
-                break;
+            // User input for blocked hours
+            HashMap<String, HashMap<String, String>> blockedHours = getUserInputBlockedHours();
+            System.out.println("Blocked Hours:");
+       /* for (String blockedHour : blockedHours) {
+            System.out.println(blockedHour);
+        }*/
+            for (Course course : courses) {
+                studentCountPerCourse.put(course.getCourseId(), studentCountPerCourse.getOrDefault(course.getCourseId(), 0) + 1);
+                examDurationPerCourse.put(course.getCourseId(), course.getExamDuration());
             }
 
-            blockedHours.add(input);
-        }
 
-        return blockedHours;
-    }
-    private static Set<String> extractProfessors(Course[] courses) {
+            System.out.println("Student No and Exam Duration:");
+            for (String courseId : studentCountPerCourse.keySet()) {
+                int studentCount = studentCountPerCourse.get(courseId);
+                int examDuration = examDurationPerCourse.get(courseId);
+
+                System.out.println("Course Code: " + courseId + ", Student Number: " + studentCount + ", Exam Duration: " + examDuration + "minute");
+
+            }
+
+        ExamScheduler scheduler = new ExamScheduler(classrooms, courses);
+
+        blockedHours.forEach((day, hours) -> hours.forEach((hour, courseId) ->
+                scheduler.addBlockedHour(day, hour, courseId)));
+
+        scheduler.createSchedule();}
+
+            private static HashMap<String, HashMap<String, String>> getUserInputBlockedHours() {
+                HashMap<String, HashMap<String, String>> blockedHours = new HashMap<>();
+                Scanner scanner = new Scanner(System.in);
+
+                System.out.println("Enter blocked hours for common courses (format: Day Hour CourseID):");
+                System.out.println("Example: Monday 2 PM TIT102");
+
+                while (true) {
+                    System.out.print("Enter blocked hour (or type 'done' to finish): ");
+                    String input = scanner.nextLine().trim();
+
+                    if (input.equalsIgnoreCase("done")) {
+                        break;
+                    }
+
+                    String[] parts = input.split(" ");
+                    if (parts.length == 3) {
+                        String day = parts[0];
+                        String hour = parts[1];
+                        String courseId = parts[2];
+                        blockedHours.computeIfAbsent(day, k -> new HashMap<>()).put(hour, courseId);
+                    }
+                }
+
+                return blockedHours;
+            }
+
+            private static Set<String> extractProfessors(Course[] courses) {
         Set<String> uniqueProfessors = new HashSet<>();
 
         if (courses != null) {
@@ -123,9 +167,9 @@ public class Main {
         return uniqueCourseIds;
     }
 
-    private static Course[] readCourseCsvFile(String csvFile) {
+    private static List<Course> readCourseCsvFile(String csvFile) {
         String line;
-        Course[] courses = null;
+                List<Course> courses = null;
 
         try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
             // Başlık satırını atlayalım
@@ -139,71 +183,48 @@ public class Main {
                     String studentId = columns[0].trim();
                     String professorName = columns[1].trim();
                     String courseId = columns[2].trim();
-                    studentsPerCourse.put(courseId, studentsPerCourse.getOrDefault(courseId, 0) + 1);
-                    String examDurationString = columns[3].trim();
+                   // studentsPerCourse.put(courseId, studentsPerCourse.getOrDefault(courseId, 0) + 1);
+                    int examDuration = Integer.parseInt(columns[3].trim());
 
-                    // "Exam Duration" sütunu sayısal bir değerse devam edelim
-                    try {
-                        int examDuration = Integer.parseInt(examDurationString);
+                    // studentsPerCourse.put(courseId, studentsPerCourse.getOrDefault(courseId, 0) + 1);
+                    Course course = new Course(studentId, professorName, courseId, examDuration);
+                    courses.add(course);
 
-                        // Create Course object and add to the array
-                        Course course = new Course(studentId, professorName, courseId, examDuration);
-                        courses = addCourseToArray(courses, course);
-                    } catch (NumberFormatException e) {
-                        System.out.println("Invalid Exam Duration format: " + examDurationString);
-                    }
-                } else {
-                    break; // Sütun sayısı 4 değilse döngüden çık
-                }
-            }
-        } catch (IOException e) {
+                   }}} catch (IOException e) {
             e.printStackTrace();
         }
-
-        return courses;
-    }
+            return courses;
+        }
 
 
     private static void printStudentsPerCourse() {
         System.out.println("Number of students per course:");
-        for (Map.Entry<String, Integer> entry : studentsPerCourse.entrySet()) {
+        for (Map.Entry<String, Integer> entry : studentCountPerCourse.entrySet()) {
             System.out.println(entry.getKey() + ": " + entry.getValue() + " students");
         }
     }
 
-    private static Classroom[] readClassroomCsvFile(String csvFile) {
-        String line;
-        Classroom[] classrooms = null;
+        private static List<Classroom> readClassroomCsvFile(String csvFile) {
+            String line;
+            List<Classroom> classrooms = new ArrayList<>();
 
-        try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
-            // Başlık satırını atlayalım
-            br.readLine();
+            try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
+                br.readLine(); // Skip header line
+                while ((line = br.readLine()) != null) {
+                    String[] columns = line.split(",");
+                    if (columns.length == 2) {
+                        String roomId = columns[0].trim();
+                        int capacity = Integer.parseInt(columns[1].trim());
 
-            while ((line = br.readLine()) != null) {
-                String[] columns = line.split(",");
-
-                // Assuming columns are: RoomID, Capacity
-                if (columns.length == 2) {
-                    String roomId = columns[0].trim();
-                    String capacityString = columns[1].trim();
-
-                    try {
-                        int capacity = Integer.parseInt(capacityString);
                         Classroom classroom = new Classroom(roomId, capacity);
-                        classrooms = addClassroomToArray(classrooms, classroom);
-                    } catch (NumberFormatException e) {
-                        System.out.println("Invalid Capacity format: " + capacityString);
+                        classrooms.add(classroom);
                     }
-                } else {
-                    System.out.println("Invalid column order. The CSV should have exactly 2 columns.");
-                    break; // Sütun sayısı 2 değilse döngüden çık
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+            return classrooms;
         }
-        return classrooms;
-    }
 
     private static Course[] addCourseToArray(Course[] courses, Course course) {
         if (courses == null) {
@@ -231,32 +252,27 @@ public class Main {
         return classrooms;
     }
 
-    private static void printCourses(Course[] courses) {
-        int count=1;
-        if (courses != null) {
-            System.out.println("Printing Courses:");
-            for (Course course : courses) {
-                System.out.println(count+ " " +course);
-                count++;
+            private static void printCourses(List<Course> courses) {
+                if (courses != null && !courses.isEmpty()) {
+                    System.out.println("Printing Courses:");
+                    for (Course course : courses) {
+                        System.out.println(course);
+                    }
+                } else {
+                    System.out.println("No courses to print.");
+                }
             }
-        } else {
-            System.out.println("No courses to print.");
-        }
-    }
 
-    private static void printClassrooms(Classroom[] classrooms) {
-        int counter=0;
-        if (classrooms != null) {
-            System.out.println("Printing Classrooms:");
-            for (Classroom classroom : classrooms) {
-                System.out.println(classroom);
-                counter++;
+            private static void printClassrooms(List<Classroom> classrooms) {
+                if (classrooms != null && !classrooms.isEmpty()) {
+                    System.out.println("Printing Classrooms:");
+                    for (Classroom classroom : classrooms) {
+                        System.out.println(classroom);
+                    }
+                } else {
+                    System.out.println("No classrooms to print.");
+                }
             }
-        } else {
-            System.out.println("No classrooms to print.");
-        }
-        System.out.println("Classroom number: "+counter);
-    }
 
     /*
 
@@ -360,7 +376,7 @@ public class Main {
                 for (int hour = START_HOUR; hour <= END_HOUR; hour++) {//saat 6 dahil mi?
                     for (Classroom classroom : classrooms) {
 
-                        for (Map.Entry<String, Integer> entries : studentsPerCourse.entrySet()) {
+                        for (Map.Entry<String, Integer> entries : studentCountPerCourse.entrySet()) {
                             //I write this if statement for reaching matching present course and course of studentsPerCourse
                             //Because i want to find student number for present course
                             if (course.getCourseId() == entries.getKey()) {
@@ -383,7 +399,7 @@ public class Main {
                                             for (int remainingDay = 0; remainingDay < DAYS_IN_WEEK; remainingDay++) {
                                                 for (int remainingHour = START_HOUR; remainingHour <= END_HOUR; remainingHour++) {
                                                     for (Classroom remainingClassroom : classrooms) {
-                                                        for (Map.Entry<String, Integer> remainingEntries : studentsPerCourse.entrySet()) {
+                                                        for (Map.Entry<String, Integer> remainingEntries : studentCountPerCourse.entrySet()) {
                                                             if (remainingCourse.getCourseId() == entries.getKey()) {
                                                                 if (remainingClassroom.getCapacity() / 2 >= remainingEntries.getValue()) {
                                                                     schedule.scheduleExam(remainingDay, remainingHour, remainingCourse,
