@@ -5,12 +5,13 @@ import java.io.IOException;
 import java.util.*;
 
 public class Main {
+    static Map<String, Integer> studentCountPerCourse = new HashMap<>();
+    static Map<String, Integer> examDurationPerCourse = new HashMap<>();
 
     private static final int DAYS_IN_WEEK = 6;
     private static final int START_HOUR = 9;
     private static final int END_HOUR = 18;
-    static Map<String, Integer> studentCountPerCourse = new HashMap<>();
-    static Map<String, Integer> examDurationPerCourse = new HashMap<>();
+
     public static void main(String[] args) {
 
       /*  // READ CSV FILES
@@ -82,69 +83,73 @@ public class Main {
         }
 */
 
+        //deneme
+        List<Course> courses = readCourseCsvFile("classList.csv");
+        printCourses(courses);
+        List<Classroom> classrooms = readClassroomCsvFile("classroomCapacity.csv");
+        printClassrooms(classrooms);
 
-
-            List<Course> courses = readCourseCsvFile("classList.csv");
-            printCourses(courses);
-            List<Classroom> classrooms = readClassroomCsvFile("classroomCapacity.csv");
-            printClassrooms(classrooms);
-
-            // User input for blocked hours
-            HashMap<String, HashMap<String, String>> blockedHours = getUserInputBlockedHours();
-            System.out.println("Blocked Hours:");
+        // User input for blocked hours
+        HashMap<String, HashMap<String, String>> blockedHours = getUserInputBlockedHours();
+        System.out.println("Blocked Hours:");
        /* for (String blockedHour : blockedHours) {
             System.out.println(blockedHour);
         }*/
-            for (Course course : courses) {
-                studentCountPerCourse.put(course.getCourseId(), studentCountPerCourse.getOrDefault(course.getCourseId(), 0) + 1);
-                examDurationPerCourse.put(course.getCourseId(), course.getExamDuration());
-            }
+        for (Course course : courses) {
+            studentCountPerCourse.put(course.getCourseId(), studentCountPerCourse.getOrDefault(course.getCourseId(), 0) + 1);
+            examDurationPerCourse.put(course.getCourseId(), course.getExamDuration());
+        }
 
 
-            System.out.println("Student No and Exam Duration:");
-            for (String courseId : studentCountPerCourse.keySet()) {
-                int studentCount = studentCountPerCourse.get(courseId);
-                int examDuration = examDurationPerCourse.get(courseId);
+        System.out.println("Student No and Exam Duration:");
+        for (String courseId : studentCountPerCourse.keySet()) {
+            int studentCount = studentCountPerCourse.get(courseId);
+            int examDuration = examDurationPerCourse.get(courseId);
 
-                System.out.println("Course Code: " + courseId + ", Student Number: " + studentCount + ", Exam Duration: " + examDuration + "minute");
+            System.out.println("Course Code: " + courseId + ", Student Number: " + studentCount + ", Exam Duration: " + examDuration + "minute");
 
-            }
+        }
 
-        ExamScheduler scheduler = new ExamScheduler(classrooms, courses);
+        ExamSchedule scheduler = new ExamSchedule(classrooms, courses);
 
         blockedHours.forEach((day, hours) -> hours.forEach((hour, courseId) ->
                 scheduler.addBlockedHour(day, hour, courseId)));
 
         scheduler.createSchedule();}
 
-            private static HashMap<String, HashMap<String, String>> getUserInputBlockedHours() {
-                HashMap<String, HashMap<String, String>> blockedHours = new HashMap<>();
-                Scanner scanner = new Scanner(System.in);
 
-                System.out.println("Enter blocked hours for common courses (format: Day Hour CourseID):");
-                System.out.println("Example: Monday 2 PM TIT102");
+    //try common course blocked hourse
+    private static HashMap<String, HashMap<String, String>> getUserInputBlockedHours() {
+        HashMap<String, HashMap<String, String>> blockedHours = new HashMap<>();
+        Scanner scanner = new Scanner(System.in);
 
-                while (true) {
-                    System.out.print("Enter blocked hour (or type 'done' to finish): ");
-                    String input = scanner.nextLine().trim();
+        System.out.println("Enter blocked hours for common courses (format: Day Hour CourseID):");
+        System.out.println("Example: Monday 2 PM TIT102");
 
-                    if (input.equalsIgnoreCase("done")) {
-                        break;
-                    }
+        while (true) {
+            System.out.print("Enter blocked hour (or type 'done' to finish): ");
+            String input = scanner.nextLine().trim();
 
-                    String[] parts = input.split(" ");
-                    if (parts.length == 3) {
-                        String day = parts[0];
-                        String hour = parts[1];
-                        String courseId = parts[2];
-                        blockedHours.computeIfAbsent(day, k -> new HashMap<>()).put(hour, courseId);
-                    }
-                }
-
-                return blockedHours;
+            if (input.equalsIgnoreCase("done")) {
+                break;
             }
 
-            private static Set<String> extractProfessors(Course[] courses) {
+            String[] parts = input.split(" ");
+            if (parts.length == 3) {
+                String day = parts[0];
+                String hour = parts[1];
+                String courseId = parts[2];
+                blockedHours.computeIfAbsent(day, k -> new HashMap<>()).put(hour, courseId);
+            }
+        }
+
+        return blockedHours;
+    }
+
+
+
+
+    private static Set<String> extractProfessors(Course[] courses) {
         Set<String> uniqueProfessors = new HashSet<>();
 
         if (courses != null) {

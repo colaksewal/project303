@@ -1,6 +1,6 @@
 import java.util.*;
 
-public class ExamScheduler {
+public class ExamSchedule {
     Map<String, List<String>> schedule; // Time Slot -> List of Course IDs
     Map<String, String> professorCourseMap; // Course ID -> Professor Name
     Map<String, List<String>> studentCourseMap; // Student ID -> List of Course IDs
@@ -11,7 +11,7 @@ public class ExamScheduler {
     List<Classroom> classrooms;
     List<Course> courses;
 
-    public ExamScheduler(List<Classroom> classrooms, List<Course> courses) {
+    public ExamSchedule(List<Classroom> classrooms, List<Course> courses) {
         this.classrooms = new ArrayList<>(classrooms);
         this.courses = new ArrayList<>(courses);
         this.courseClassroomMap = new HashMap<>();
