@@ -13,12 +13,12 @@ public class Schedule{
 
     public boolean scheduleExam(int day, int hour, Course course, Classroom classroom) {
         if (!hasStudentExam(day, hour, course) && !hasProfessorExam(day, hour, course)) {
-           // if (classroom.getCapacity() >= 2 * studentsPerCourse.get(course.getCourseId())) {
-        schedule.computeIfAbsent(day, k -> new HashMap<>());//ensure there is a mapping, if is not compose new hashmap and associated with day
-        schedule.get(day).computeIfAbsent(hour, k -> new ArrayList<>());
-        schedule.get(day).get(hour).add(new Exam(course, classroom));
-                return true;
-            }
+            // if (classroom.getCapacity() >= 2 * studentsPerCourse.get(course.getCourseId())) {
+            schedule.computeIfAbsent(day, k -> new HashMap<>());//ensure there is a mapping, if is not compose new hashmap and associated with day
+            schedule.get(day).computeIfAbsent(hour, k -> new ArrayList<>());
+            schedule.get(day).get(hour).add(new Exam(course, classroom));
+            return true;
+        }
         //}
         return false;
     }

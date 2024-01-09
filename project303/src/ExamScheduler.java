@@ -1,6 +1,6 @@
 import java.util.*;
 
-public class ExamSchedule {
+public class ExamScheduler {
     Map<String, List<String>> schedule; // Time Slot -> List of Course IDs
     Map<String, String> professorCourseMap; // Course ID -> Professor Name
     Map<String, List<String>> studentCourseMap; // Student ID -> List of Course IDs
@@ -11,7 +11,7 @@ public class ExamSchedule {
     List<Classroom> classrooms;
     List<Course> courses;
 
-    public ExamSchedule(List<Classroom> classrooms, List<Course> courses) {
+    public ExamScheduler(List<Classroom> classrooms, List<Course> courses) {
         this.classrooms = new ArrayList<>(classrooms);
         this.courses = new ArrayList<>(courses);
         this.courseClassroomMap = new HashMap<>();
@@ -34,11 +34,17 @@ public class ExamSchedule {
     }
 
     public void addBlockedHour(String day, String hour, String courseId) {
+        //System.out.println("Blocked " + day + " " +  hour + " " + courseId);
         blockedHours.computeIfAbsent(day, k -> new HashMap<>()).put(hour, courseId);
     }
+
     public void createSchedule() {
+        //zamanları oluşturmak için
         initializeTimeSlots();
+
+        //ekstra gün istenmesi durumu
         boolean needExtraDay = false;
+
 
         for (Course course : courses) {
             boolean scheduled = scheduleCourse(course);
@@ -79,8 +85,8 @@ public class ExamSchedule {
         courseClassroomMap.clear();
     }
 
-    void printSchedule() {
-        System.out.println("Final Exam Schedule:");
+     void printSchedule() {
+        System.out.println("Midterm Exam Schedule:");
         for (Map.Entry<String, List<String>> entry : schedule.entrySet()) {
             String timeSlot = entry.getKey();
             List<String> coursesInSlot = entry.getValue();
@@ -102,12 +108,13 @@ public class ExamSchedule {
         }
     }
 
-
-
+    //burası değişti
     private boolean scheduleCourse(Course course) {
         if (courseIsAlreadyScheduled(course)) {
             return true; // Skip already scheduled courses
         }
+
+        addBlockedHoursToSchedule(); // Bloklu saatleri ekleyelim
 
         for (String timeSlot : schedule.keySet()) {
             if (isSlotAvailable(timeSlot, course)) {
@@ -119,9 +126,39 @@ public class ExamSchedule {
         return false;
     }
 
+
+    //hata olabilir
+    //burası değişti
+    private void addBlockedHoursToSchedule() {
+        for (Map.Entry<String, HashMap<String, String>> dayEntry : blockedHours.entrySet()) {
+            String day = dayEntry.getKey();
+            for (Map.Entry<String, String> hourEntry : dayEntry.getValue().entrySet()) {
+                String hour = hourEntry.getKey();
+                String courseId = hourEntry.getValue();
+                String timeSlot = day + " " + hour;
+
+                // Check if the time slot is already in the schedule
+                // Check if the time slot is already in the schedule
+                if (schedule.containsKey(timeSlot)) {
+                    // Only add the blocked course if it's not already in the schedule
+                    if (!schedule.get(timeSlot).contains(courseId)) {
+                        schedule.get(timeSlot).add(courseId);
+                    }
+                } else {
+                    // If the time slot is not in the schedule, create a new list and add the blocked course
+                    List<String> coursesInSlot = new ArrayList<>();
+                    coursesInSlot.add(courseId);
+                    schedule.put(timeSlot, coursesInSlot);  // Burada put kullanarak yeni bir entry ekliyorsunuz.
+                }
+
+            }
+        }
+    }
+
+
+
     private boolean courseIsAlreadyScheduled(Course course) {
-        return schedule.values().stream()
-                .anyMatch(courses -> courses.contains(course.getCourseId()));
+        return schedule.values().stream().anyMatch(courses -> courses.contains(course.getCourseId()));
     }
 
     private void assignClassroomToCourse(String timeSlot, Course course) {
@@ -129,18 +166,24 @@ public class ExamSchedule {
         List<String> studentsInCourse = studentCourseMap.get(course.getStudentId());
         int classSize = (studentsInCourse != null) ? studentsInCourse.size() : 0;
 
+        String day = timeSlot.split(" ")[0];
+        String hour = timeSlot.split(" ")[1];
+        HashMap<String, String> dayBlockedHours = blockedHours.getOrDefault(day, new HashMap<>());
+
         for (Classroom classroom : classrooms) {
             if (classroom.getCapacity() >= classSize * 2) {
                 // Check if this classroom is already used in this time slot
-                if (!isClassroomUsed(timeSlot, classroom.getRoomId())) {
+                if (!isClassroomUsed(timeSlot, classroom.getRoomId()) &&
+                        (!dayBlockedHours.containsKey(hour) || dayBlockedHours.get(hour).equals(course.getCourseId()))) {
                     // Assign this classroom to the course
                     courseClassroomMap.put(course.getCourseId(), classroom.getRoomId());
                     return;
                 }
             }
         }
+        // If no classroom is assigned, print a message
+        System.out.println("Failed to assign a classroom to Course ID: " + course.getCourseId());
     }
-
 
     private boolean isSlotAvailable(String timeSlot, Course course) {
         // Check if any student in the course has an exam at this time slot
@@ -152,15 +195,18 @@ public class ExamSchedule {
                 }
             }
         }
-
         // Check if the professor has an exam at this time slot
         String professor = course.getProfessorName();
         if (isProfessorBusy(timeSlot, professor)) {
             return false;
         }
+
         String day = timeSlot.split(" ")[0];
         String hour = timeSlot.split(" ")[1];
+
+
         HashMap<String, String> dayBlockedHours = blockedHours.getOrDefault(day, new HashMap<>());
+
         if (dayBlockedHours.containsKey(hour) && !dayBlockedHours.get(hour).equals(course.getCourseId())) {
             return false; // The time slot is blocked by another course
         }
@@ -189,7 +235,6 @@ public class ExamSchedule {
         }
         return false;
     }
-
     private boolean isClassroomAvailable(String timeSlot, Course course) {
         // Calculate the number of students in the course from the studentCourseMap
         List<String> studentsInCourse = studentCourseMap.get(course.getStudentId());
@@ -209,7 +254,9 @@ public class ExamSchedule {
 
     private boolean isClassroomUsed(String timeSlot, String roomId) {
         // Check if the classroom is already scheduled for an exam in the given time slot
-        for (String courseId : schedule.get(timeSlot)) {
+        List<String> courseIdsInSlot = schedule.getOrDefault(timeSlot, new ArrayList<>());
+
+        for (String courseId : courseIdsInSlot) {
             // Assuming there is a method to find the classroom assigned to a course
             String assignedClassroomId = findClassroomIdForCourse(courseId);
             if (assignedClassroomId != null && assignedClassroomId.equals(roomId)) {
@@ -219,9 +266,9 @@ public class ExamSchedule {
         return false;
     }
 
+
     private String findClassroomIdForCourse(String courseId) {
         return courseClassroomMap.getOrDefault(courseId, null);
     }
-
 
 }

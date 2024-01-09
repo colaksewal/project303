@@ -4,6 +4,7 @@ public class Course {
     private String professorName;
     private String courseId;
     private int examDuration;
+
     //Constructor of class
     public Course(String studentId, String professorName, String courseId, int examDuration) {
         this.studentId = studentId;
@@ -11,6 +12,7 @@ public class Course {
         this.courseId = courseId;
         this.examDuration = examDuration;
     }
+
     //Getters
     public String getStudentId() {
         return studentId;
@@ -37,4 +39,7 @@ public class Course {
     }
 
 
+    public String getCourseID() {
+        return courseId;
+    }
 }
