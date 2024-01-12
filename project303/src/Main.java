@@ -7,12 +7,13 @@ public class Main {
    // static Map<String, Integer> studentsPerCourse=new HashMap<>();
    static Map<String, Integer> studentCountPerCourse = new HashMap<>();
    static Map<String, Integer> examDurationPerCourse = new HashMap<>();
+    static Map<String, Integer> examDurations = new HashMap<>();
 
     public static void main(String[] args) {
 
-        List<Course> courses = readCourseCsvFile("classList.csv");
+        List<Course> courses = readCourseCsvFile("C:\\Users\\lenovo\\Desktop\\projeY\\project303\\classList.csv");
         //printCourses(courses);
-        List<Classroom> classrooms = readClassroomCsvFile("classroomCapacity.csv");
+        List<Classroom> classrooms = readClassroomCsvFile("C:\\Users\\lenovo\\Desktop\\projeY\\project303\\classroomCapacity.csv");
         //printClassrooms(classrooms);
 
         // User input for blocked hours
@@ -26,26 +27,23 @@ public class Main {
             }
         }
 
-        ExamScheduler scheduler = new ExamScheduler(classrooms, courses);
-        // Step 3: Generate the schedule
+        ExamScheduler scheduler = new ExamScheduler(classrooms, courses, examDurations);
 
-
-        //burası değişti
         blockedHours.forEach((day, hours) -> hours.forEach((hour, courseId) -> scheduler.addBlockedHour(day, hour, courseId)));
         scheduler.createSchedule();
 
-        /*for (Course course : courses) {
+      /*  for (Course course : courses) {
             studentCountPerCourse.put(course.getCourseID(), studentCountPerCourse.getOrDefault(course.getCourseID(), 0) + 1);
             examDurationPerCourse.put(course.getCourseID(), course.getExamDuration());
-        }*/
-        /*System.out.println("Öğrenci Sayıları ve Sınav Süreleri:");
+        }
+        System.out.println("Öğrenci Sayıları ve Sınav Süreleri:");
         for (String courseId : studentCountPerCourse.keySet()) {
             int studentCount = studentCountPerCourse.get(courseId);
             int examDuration = examDurationPerCourse.get(courseId);
 
             System.out.println("Ders Kodu: " + courseId + ", Öğrenci Sayısı: " + studentCount + ", Sınav Süresi: " + examDuration + " dakika");
-        }*/
-
+        }
+*/
 
     }
 
@@ -56,7 +54,7 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
 
         System.out.println("Enter blocked hours for common courses (format: Day Hour CourseID):");
-        System.out.println("Example: Monday 2 PM TIT102");
+        System.out.println("Example: Monday 2 PM TİT101");
 
         while (true) {
             System.out.print("Enter blocked hour (or type 'done' to finish): ");
@@ -134,7 +132,7 @@ public class Main {
                     String professorName = columns[1].trim();
                     String courseId = columns[2].trim();
                     int examDuration = Integer.parseInt(columns[3].trim());
-
+                    examDurations.put(courseId, examDuration);
                    // studentsPerCourse.put(courseId, studentsPerCourse.getOrDefault(courseId, 0) + 1);
                     Course course = new Course(studentId, professorName, courseId, examDuration);
                     courses.add(course);
