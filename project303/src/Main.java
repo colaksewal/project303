@@ -4,22 +4,21 @@ import java.io.IOException;
 import java.util.*;
 
 public class Main {
-   // static Map<String, Integer> studentsPerCourse=new HashMap<>();
-   static Map<String, Integer> studentCountPerCourse = new HashMap<>();
-   static Map<String, Integer> examDurationPerCourse = new HashMap<>();
+    // Map to store the duration of exams for each course
     static Map<String, Integer> examDurations = new HashMap<>();
 
     public static void main(String[] args) {
-
-        List<Course> courses = readCourseCsvFile("C:\\Users\\lenovo\\Desktop\\projeY\\project303\\classList.csv");
+        // Read course and classroom data from a CSV file and store it in a list
+        List<Course> courses = readCourseCsvFile("classList.csv");
         //printCourses(courses);
-        List<Classroom> classrooms = readClassroomCsvFile("C:\\Users\\lenovo\\Desktop\\projeY\\project303\\classroomCapacity.csv");
+        List<Classroom> classrooms = readClassroomCsvFile("classroomCapacity.csv");
         //printClassrooms(classrooms);
 
         // User input for blocked hours
         HashMap<String, HashMap<String, String>> blockedHours = getUserInputBlockedHours();
         System.out.println("Blocked Hours:");
 
+        // Display the blocked hours for courses
         for (String day : blockedHours.keySet()) {
             for (String hour : blockedHours.get(day).keySet()) {
                 String courseId = blockedHours.get(day).get(hour);
@@ -27,12 +26,16 @@ public class Main {
             }
         }
 
+        // Create an exam scheduler
         ExamScheduler scheduler = new ExamScheduler(classrooms, courses, examDurations);
 
+        // Add blocked hours to the scheduler
         blockedHours.forEach((day, hours) -> hours.forEach((hour, courseId) -> scheduler.addBlockedHour(day, hour, courseId)));
+
+        // Generate the exam schedule
         scheduler.createSchedule();
 
-      /*  for (Course course : courses) {
+        /*  for (Course course : courses) {
             studentCountPerCourse.put(course.getCourseID(), studentCountPerCourse.getOrDefault(course.getCourseID(), 0) + 1);
             examDurationPerCourse.put(course.getCourseID(), course.getExamDuration());
         }
@@ -43,12 +46,15 @@ public class Main {
 
             System.out.println("Ders Kodu: " + courseId + ", Öğrenci Sayısı: " + studentCount + ", Sınav Süresi: " + examDuration + " dakika");
         }
-*/
-
+        */
     }
 
 
-    // Modify the method to return HashMap<String, Set<String>>
+    /**
+     * Reads user input to determine blocked hours for exams
+     * The input format expected is "Day Hour CourseID"
+     * @return A map with the blocked hours details
+     */
     private static HashMap<String, HashMap<String, String>> getUserInputBlockedHours() {
         HashMap<String, HashMap<String, String>> blockedHours = new HashMap<>();
         Scanner scanner = new Scanner(System.in);
@@ -64,26 +70,32 @@ public class Main {
                 break;
             }
 
-            // Ayrıştırma işlemi
+            // Split the input into its components
             String[] parts = input.split("\\s+");
             if (parts.length == 4) {
                 String day = parts[0];
                 String hour = convertTo24HourFormat(parts[1], parts[2]);
                 String courseID = parts[3];
 
-                // blockedHours'a ekleme işlemi
+                // Add the blocked hour information to the map
                 if (!blockedHours.containsKey(day)) {
                     blockedHours.put(day, new HashMap<>());
                 }
-
                 blockedHours.get(day).put(hour, courseID);
             } else {
                 System.out.println("Invalid input format. Please use the format: Day Hour CourseID");
             }
         }
-
         return blockedHours;
     }
+
+
+    /**
+     * Converts 12-hour time format to 24-hour format.
+     * @param hour The hour to convert.
+     * @param ampm The AM/PM designation.
+     * @return The converted time in 24-hour format.
+     */
     public static String convertTo24HourFormat(String hour, String ampm) {
         int hourValue = Integer.parseInt(hour);
 
@@ -95,30 +107,11 @@ public class Main {
     }
 
 
-    private static void printCourses(List<Course> courses) {
-        if (courses != null && !courses.isEmpty()) {
-            System.out.println("Printing Courses:");
-            for (Course course : courses) {
-                System.out.println(course);
-            }
-        } else {
-            System.out.println("No courses to print.");
-        }
-    }
-
-    private static void printClassrooms(List<Classroom> classrooms) {
-        if (classrooms != null && !classrooms.isEmpty()) {
-            System.out.println("Printing Classrooms:");
-            for (Classroom classroom : classrooms) {
-                System.out.println(classroom);
-            }
-        } else {
-            System.out.println("No classrooms to print.");
-        }
-    }
-
-
-    //read classList.csv
+    /**
+     * Reads course information from a CSV file.
+     * @param csvFile The path of the CSV file to read.
+     * @return A list of Course objects parsed from the file.
+     */
     private static List<Course> readCourseCsvFile(String csvFile) {
         String line;
         List<Course> courses = new ArrayList<>();
@@ -144,12 +137,12 @@ public class Main {
         return courses;
     }
 
-    private static void addCourseToList(List<Course> courses, Course course) {
-        courses.add(course);
-    }
 
-
-    //read classroomCapacities.csv
+    /**
+     * Reads classroom information from a CSV file.
+     * @param csvFile The path of the CSV file to read.
+     * @return A list of Classroom objects parsed from the file.
+     */
     private static List<Classroom> readClassroomCsvFile(String csvFile) {
         String line;
         List<Classroom> classrooms = new ArrayList<>();
@@ -170,6 +163,31 @@ public class Main {
             e.printStackTrace();
         }
         return classrooms;
+    }
+
+    private static void printCourses(List<Course> courses) {
+        if (courses != null && !courses.isEmpty()) {
+            System.out.println("Printing Courses:");
+            for (Course course : courses) {
+                System.out.println(course);
+            }
+        } else {
+            System.out.println("No courses to print.");
+        }
+    }
+
+    private static void printClassrooms(List<Classroom> classrooms) {
+        if (classrooms != null && !classrooms.isEmpty()) {
+            System.out.println("Printing Classrooms:");
+            for (Classroom classroom : classrooms) {
+                System.out.println(classroom);
+            }
+        } else {
+            System.out.println("No classrooms to print.");
+        }
+    }
+    private static void addCourseToList(List<Course> courses, Course course) {
+        courses.add(course);
     }
 
     private static Classroom[] addClassroomToArray(Classroom[] classrooms, Classroom classroom) {
