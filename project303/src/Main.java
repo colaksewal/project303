@@ -8,10 +8,19 @@ public class Main {
     static Map<String, Integer> examDurations = new HashMap<>();
 
     public static void main(String[] args) {
+        if (args.length != 2) {
+            System.out.println("Usage: CsvReader <classListCsvFile> <classroomCapacityCsvFile>");
+            System.exit(1);
+        }
+
+        String classListFile = args[0];
+        String classroomCapacityFile = args[1];
+
+
         // Read course and classroom data from a CSV file and store it in a list
-        List<Course> courses = readCourseCsvFile("classList.csv");
+        List<Course> courses = readCourseCsvFile(classListFile);
         //printCourses(courses);
-        List<Classroom> classrooms = readClassroomCsvFile("classroomCapacity.csv");
+        List<Classroom> classrooms = readClassroomCsvFile(classroomCapacityFile);
         //printClassrooms(classrooms);
 
         // User input for blocked hours
@@ -60,7 +69,7 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
 
         System.out.println("Enter blocked hours for common courses (format: Day Hour CourseID):");
-        System.out.println("Example: Monday 2 PM TİT101");
+        System.out.println("Example: Monday 2 PM TDL101");
 
         while (true) {
             System.out.print("Enter blocked hour (or type 'done' to finish): ");
