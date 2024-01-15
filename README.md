@@ -17,7 +17,7 @@ Project303 is a scheduling tool comprising four classes: `Classroom`, `Course`, 
    java -jar project303.jar classList.csv classroomCapacity.csv
 
 ## Contributors
-Eser 20050111015
+Betül Eser 20050111015
 Ezgi Subaşı 20050111016
 Şevval Çolak 20050111082
 Yasemin Nur Yalçın 20050111054
