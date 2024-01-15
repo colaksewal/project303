@@ -14,6 +14,14 @@ public class ExamScheduler {
     List<Classroom> classrooms;
     List<Course> courses;
 
+      /**
+     * Constructor for ExamScheduler.
+     *
+     * @param classrooms     List of classrooms available for exams.
+     * @param allCourses      List of all courses, including student and professor information.
+     * @param examDurations   Map containing the duration of each exam (Course ID -> Exam Duration).
+     */
+
     public ExamScheduler(List<Classroom> classrooms, List<Course> allCourses, Map<String, Integer> examDurations) {
         this.classrooms = new ArrayList<>(classrooms);
         this.courseClassroomMap = new HashMap<>();
@@ -55,6 +63,13 @@ public class ExamScheduler {
         this.courses = uniqueCourses;
         //System.out.println("BAKALIM\n"+ courseStudentsMap);
     }
+     /**
+     * Adds a blocked hour for a specific course on a given day and hour.
+     *
+     * @param day       The day on which the blockage occurs.
+     * @param hour      The hour during which the blockage occurs.
+     * @param courseId  The ID of the course for which the hour is blocked.
+     */
 
     public void addBlockedHour(String day, String hour, String courseId) {
         //System.out.println("Blocked " + day + " " +  hour + " " + courseId);
@@ -165,7 +180,12 @@ public class ExamScheduler {
         return null;
     }
 
-
+ /**
+     * Formats a given time slot and duration into a human-readable string.
+     * @param timeSlot The time slot to format.
+     * @param duration The duration of the exam.
+     * @return A formatted string representing the time slot and duration.
+     */
     String formatTimeSlot(String timeSlot, int duration) {
         // Example entry: "Monday 16:00"
         String[] parts = timeSlot.split(" ");
@@ -214,7 +234,11 @@ public class ExamScheduler {
             }
         }
     }
-
+/**
+     * Attempts to schedule a course into an available time slot.
+     * @param course The course to be scheduled.
+     * @return true if the course was successfully scheduled, false otherwise.
+     */
     private boolean scheduleCourse(Course course) {
 
         int examDuration = examDurations.getOrDefault(course.getCourseId(), 30); // Varsayılan süre 30 dakika olsun
@@ -231,6 +255,12 @@ public class ExamScheduler {
         }
         return false;
     }
+
+      /**
+     * Marks time slots as occupied for a certain duration starting from a given time slot.
+     * @param startTimeSlot The starting time slot.
+     * @param duration The duration for which to mark time slots as occupied.
+     */
     private void markOccupiedTimeSlots(String startTimeSlot, int duration) {
         String[] parts = startTimeSlot.split(" ");
         String startDay = parts[0];
@@ -254,6 +284,13 @@ public class ExamScheduler {
         }
     }
 
+     /**
+     * Checks if a time slot is available for a course for a given duration.
+     * @param startTimeSlot The starting time slot.
+     * @param duration The duration for which to check availability.
+     * @param course The course for which to check the availability.
+     * @return true if the time slot is available, false otherwise.
+     */
     private boolean isSlotAvailableForDuration(String startTimeSlot, int duration, Course course) {
         String[] parts = startTimeSlot.split(" ");
         String startDay = parts[0];
@@ -270,7 +307,13 @@ public class ExamScheduler {
         }
         return true; //All time slots are available 
     }
-
+ /**
+     * Assigns a classroom to a course for a specific time slot.
+     * @param timeSlot The time slot for which to assign a classroom.
+     * @param course The course to which the classroom is to be assigned.
+     * @param duration The duration of the exam.
+     * @return true if a classroom was successfully assigned, false otherwise.
+     */
     private boolean assignClassroomToCourse(String timeSlot, Course course, int duration) {
         // Calculate the number of students in the course from the studentCourseMap
         //  List<String> studentsInCourse = studentCourseMap.get(course.getCourseID());
@@ -303,6 +346,14 @@ public class ExamScheduler {
 
     return false;}
 
+     /**
+     * Checks if a time slot is available for scheduling a course.
+     * @param timeSlot The time slot to check for availability.
+     *
+ * @param course The course for which the availability is to be checked.
+ * @return true if the time slot is available, false otherwise.
+ */
+
     private boolean isSlotAvailable(String timeSlot, Course course) {
         // Check if any student in the course has an exam at this time slot
         List<String> studentsInCourse = courseStudentsMap.get(course.getCourseId());
@@ -332,7 +383,12 @@ public class ExamScheduler {
         // Check for classroom availability and capacity
         return isClassroomAvailable(timeSlot, course);
     }
-
+/**
+ * Checks if a student is already scheduled for an exam in a given time slot.
+ * @param timeSlot The time slot to check.
+ * @param studentId The ID of the student.
+ * @return true if the student is busy in the given time slot, false otherwise.
+ */
     private boolean isStudentBusy(String timeSlot, String studentId) {
         List<String> courses = studentCourseMap.get(studentId);
         if (courses != null) {
@@ -345,6 +401,12 @@ public class ExamScheduler {
         return false;
     }
 
+     /**
+ * Checks if a professor is already scheduled for an exam in a given time slot.
+ * @param timeSlot The time slot to check.
+ * @param professor The name of the professor.
+ * @return true if the professor is busy in the given time slot, false otherwise.
+ */
     private boolean isProfessorBusy(String timeSlot, String professor) {
         for (Map.Entry<String, String> entry : professorCourseMap.entrySet()) {
             if (entry.getValue().equals(professor) && schedule.get(timeSlot).contains(entry.getKey())) {
@@ -353,6 +415,13 @@ public class ExamScheduler {
         }
         return false;
     }
+
+     /**
+ * Checks if a classroom is available for a course at a given time slot.
+ * @param timeSlot The time slot to check.
+ * @param course The course for which to check classroom availability.
+ * @return true if an appropriate classroom is available, false otherwise.
+ */
     private boolean isClassroomAvailable(String timeSlot, Course course) {
         // Calculate the number of students in the course from the studentCourseMap
         List<String> studentsInCourse = studentCourseMap.get(course.getStudentId());
@@ -369,7 +438,12 @@ public class ExamScheduler {
         }
         return false;
     }
-
+/**
+ * Checks if a classroom is already used in a given time slot.
+ * @param timeSlot The time slot to check.
+ * @param roomId The ID of the classroom.
+ * @return true if the classroom is used in the time slot, false otherwise.
+ */
     private boolean isClassroomUsed(String timeSlot, String roomId) {
         //Controll assigning class of all courses which plaining in time slot  
         if (!schedule.containsKey(timeSlot)) {
